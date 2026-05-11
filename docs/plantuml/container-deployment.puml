@@ -1,0 +1,35 @@
+@startuml
+title InsightFlow AI - Local Container Deployment
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+node "Docker Host" {
+  node "Docker Compose Network" {
+    [web]
+    [api]
+    [etl-worker]
+    [ai-analyst]
+    database "postgres" as postgres
+    [mock-data-provider]
+  }
+}
+
+[web] --> [api] : HTTP
+[api] --> postgres : app + analytics queries
+[api] --> [etl-worker] : job orchestration
+[api] --> [ai-analyst] : AI requests
+[etl-worker] --> [mock-data-provider] : extract
+[etl-worker] --> postgres : raw/staging/analytics writes
+[ai-analyst] --> postgres : read-only analytics queries
+
+note bottom of postgres
+  Schemas:
+  - app
+  - raw
+  - staging
+  - analytics
+end note
+
+@enduml

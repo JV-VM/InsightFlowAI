@@ -1,0 +1,28 @@
+@startuml
+title InsightFlow AI - ETL Flow
+
+skinparam backgroundColor white
+skinparam shadowing false
+
+start
+:Receive ETL run request;
+:Load source configuration;
+:Extract data from API or CSV;
+:Validate required fields;
+
+if (Valid records?) then (yes)
+  :Clean and normalize values;
+  :Write raw schema tables;
+  :Transform into staging tables;
+  :Load dimensions and facts;
+  :Refresh analytical views;
+  :Persist job metrics and logs;
+  :Mark job SUCCESS;
+else (no)
+  :Persist validation errors;
+  :Mark job FAILED or PARTIAL;
+endif
+
+stop
+
+@enduml

@@ -1,0 +1,32 @@
+# Node
+node_modules/
+.pnpm-store/
+.next/
+dist/
+coverage/
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Generated docs and reports
+docs/rendered/
+powerbi/screenshots/*.png
+powerbi/screenshots/*.svg

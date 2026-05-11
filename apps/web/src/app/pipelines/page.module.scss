@@ -1,0 +1,218 @@
+.page {
+  min-height: 100vh;
+  padding: 1.5rem;
+  background: #eef3f8;
+  color: #13202f;
+}
+
+.header,
+.controls,
+.layout {
+  max-width: 76rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #17614d;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+}
+
+.actions,
+.controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions a,
+.actions button,
+.controls button {
+  min-height: 2.5rem;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font: inherit;
+  font-weight: 750;
+}
+
+.actions a {
+  display: inline-grid;
+  place-items: center;
+  background: #ffffff;
+  color: #13202f;
+  text-decoration: none;
+}
+
+.actions button,
+.controls button {
+  background: #13202f;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.controls {
+  align-items: end;
+  padding: 1rem;
+  border: 1px solid #d9e2ea;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(20, 34, 48, 0.06);
+}
+
+.controls label {
+  display: grid;
+  flex: 1;
+  gap: 0.45rem;
+  color: #263848;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.controls select {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid #cfd9e3;
+  border-radius: 6px;
+  padding: 0 0.7rem;
+  color: #13202f;
+  font: inherit;
+}
+
+.controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.error {
+  margin: 0;
+  color: #9b1c1c;
+  font-size: 0.9rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 0.9fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.list,
+.detail {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #d9e2ea;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(20, 34, 48, 0.06);
+}
+
+.list h2,
+.detail h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.1rem;
+}
+
+.list {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+}
+
+.list button {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  border: 1px solid #e2e8ef;
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: #f8fafc;
+  color: #13202f;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.list .selectedJob {
+  border-color: #17614d;
+  background: #e8f3ef;
+}
+
+.list span,
+.summary span,
+.detail li span {
+  color: #17614d;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.list small,
+.empty,
+.detail li p {
+  color: #536170;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail ol {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail li {
+  border-top: 1px solid #e2e8ef;
+  padding-top: 0.7rem;
+}
+
+.detail li strong {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.detail li p {
+  margin: 0.25rem 0 0;
+}
+
+.empty {
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .header,
+  .controls,
+  .actions,
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 1rem;
+  }
+}

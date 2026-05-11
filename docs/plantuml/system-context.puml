@@ -1,0 +1,27 @@
+@startuml
+title InsightFlow AI - System Context
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+actor "Business User" as User
+rectangle "Next.js Web App" as Web
+rectangle "NestJS API" as Api
+database "PostgreSQL\nSchemas: app/raw/staging/analytics" as Db
+rectangle "Python ETL Worker" as Etl
+rectangle "FastAPI AI Analyst" as Ai
+cloud "Fake APIs / CSV Sources" as Sources
+rectangle "Microsoft Power BI" as PowerBI
+
+User --> Web : Uses dashboard,\npipelines, AI chat
+Web --> Api : REST API
+Api --> Db : App data + analytics reads
+Api --> Etl : Trigger jobs / read status
+Api --> Ai : Ask business questions
+Etl --> Sources : Extract data
+Etl --> Db : Load raw, staging,\nanalytics data
+Ai --> Db : Read-only analytics queries
+PowerBI --> Db : Read analytics views
+
+@enduml

@@ -1,0 +1,137 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: #eef3f8;
+  color: #13202f;
+}
+
+.panel {
+  width: min(100%, 62rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 27rem);
+  gap: 2rem;
+  align-items: center;
+}
+
+.copy {
+  padding-right: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #17614d;
+}
+
+.copy h1 {
+  max-width: 34rem;
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1;
+}
+
+.copy p:not(.eyebrow) {
+  max-width: 34rem;
+  color: #4a5b6b;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px rgba(20, 34, 48, 0.09);
+}
+
+.modeSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 8px;
+  background: #edf2f6;
+}
+
+.modeSwitch button,
+.submit {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.modeSwitch button {
+  background: transparent;
+  color: #536170;
+}
+
+.modeSwitch .activeMode {
+  background: #ffffff;
+  color: #13202f;
+  box-shadow: 0 4px 12px rgba(20, 34, 48, 0.08);
+}
+
+.form label {
+  display: grid;
+  gap: 0.45rem;
+  color: #263848;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.form input {
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid #cfd9e3;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  color: #13202f;
+  font: inherit;
+}
+
+.form input:focus {
+  border-color: #17614d;
+  outline: 3px solid rgba(23, 97, 77, 0.16);
+}
+
+.error {
+  margin: 0;
+  color: #9b1c1c;
+  font-size: 0.9rem;
+}
+
+.submit {
+  background: #17614d;
+  color: #ffffff;
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@media (max-width: 760px) {
+  .page {
+    place-items: start;
+    padding: 1.25rem;
+  }
+
+  .panel {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .copy {
+    padding-right: 0;
+  }
+}

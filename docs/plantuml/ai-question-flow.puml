@@ -1,0 +1,28 @@
+@startuml
+title InsightFlow AI - AI Analyst Question Flow
+
+actor User
+participant "Web /ai" as Web
+participant "AI Analyst Service" as AI
+database "PostgreSQL analytics" as Analytics
+database "app.ai_question_logs" as Audit
+
+User -> Web : Ask analytical question
+Web -> AI : POST /ai/question
+AI -> AI : Check blocked terms and SQL-like input
+
+alt blocked or unsupported
+  AI -> Audit : Write audit row
+  AI --> Web : blocked/unsupported response
+else supported intent
+  AI -> AI : Select predefined read-only SQL
+  AI -> Analytics : SELECT from analytics schema
+  Analytics --> AI : Result rows
+  AI -> AI : Summarize result rows
+  AI -> Audit : Write audit row
+  AI --> Web : summary, SQL preview, data
+end
+
+Web --> User : Render answer and result table
+
+@enduml

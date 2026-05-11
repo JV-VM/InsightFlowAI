@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: insightflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-insightflow}
+      POSTGRES_USER: ${POSTGRES_USER:-insightflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insightflow}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-insightflow} -d ${POSTGRES_DB:-insightflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: insightflow-web
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${WEB_PORT:-3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_AI_URL: ${NEXT_PUBLIC_AI_URL:-http://localhost:8002}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+      ai-analyst:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: insightflow-api
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${API_PORT:-3001}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://insightflow:insightflow@postgres:5432/insightflow}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-phase-1}
+      ETL_WORKER_URL: ${ETL_WORKER_URL:-http://etl-worker:8001}
+    ports:
+      - "${API_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      etl-worker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  etl-worker:
+    build:
+      context: .
+      dockerfile: services/etl-worker/Dockerfile
+    container_name: insightflow-etl-worker
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${ETL_PORT:-8001}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://insightflow:insightflow@postgres:5432/insightflow}
+    ports:
+      - "${ETL_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  ai-analyst:
+    build:
+      context: .
+      dockerfile: services/ai-analyst/Dockerfile
+    container_name: insightflow-ai-analyst
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${AI_PORT:-8002}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://insightflow:insightflow@postgres:5432/insightflow}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "${AI_PORT:-8002}:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  postgres_data:

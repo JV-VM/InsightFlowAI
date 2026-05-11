@@ -1,0 +1,12 @@
+.git
+node_modules
+.pnpm-store
+.next
+dist
+coverage
+__pycache__
+.pytest_cache
+.mypy_cache
+.venv
+venv
+.env

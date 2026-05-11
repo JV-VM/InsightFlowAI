@@ -1,0 +1,46 @@
+@startuml
+title InsightFlow AI - Sales Analytics Star Schema
+
+entity "analytics.fact_sales" as fact_sales {
+  * sales_key : bigint
+  --
+  order_id : text
+  order_date : date
+  quantity : integer
+  unit_price : numeric
+  revenue : numeric
+  source_id : uuid
+  job_id : uuid
+}
+
+entity "analytics.dim_product" as dim_product {
+  * product_key : bigint
+  --
+  product_sku : text
+  product_name : text
+}
+
+entity "analytics.dim_customer" as dim_customer {
+  * customer_key : bigint
+  --
+  customer_email : text
+}
+
+entity "analytics.dim_region" as dim_region {
+  * region_key : bigint
+  --
+  region_name : text
+}
+
+entity "analytics.dim_campaign" as dim_campaign {
+  * campaign_key : bigint
+  --
+  campaign_name : text
+}
+
+fact_sales }o--|| dim_product : product_key
+fact_sales }o--|| dim_customer : customer_key
+fact_sales }o--|| dim_region : region_key
+fact_sales }o--|| dim_campaign : campaign_key
+
+@enduml

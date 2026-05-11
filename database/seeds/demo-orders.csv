@@ -1,0 +1,6 @@
+order_id,order_date,customer_email,product_sku,product_name,region,quantity,unit_price,currency,campaign
+ORD-1001,2026-01-04,alex@example.com,SKU-BOARD-01,Insight Board,North,2,149.00,USD,winter-launch
+ORD-1002,2026-01-05,sam@example.com,SKU-PIPE-02,Pipeline Monitor,West,1,249.00,USD,winter-launch
+ORD-1003,2026-01-07,mira@example.com,SKU-AI-03,AI Analyst Seat,South,3,99.00,USD,partner-demo
+ORD-1004,2026-01-09,alex@example.com,SKU-PIPE-02,Pipeline Monitor,North,1,249.00,USD,renewal-push
+ORD-1005,2026-01-11,jordan@example.com,SKU-BOARD-01,Insight Board,East,4,149.00,USD,partner-demo
