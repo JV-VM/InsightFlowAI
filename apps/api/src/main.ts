@@ -38,4 +38,7 @@ async function bootstrap() {
   );
 }
 
-void bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error("API bootstrap failed", error);
+  process.exit(1);
+});
