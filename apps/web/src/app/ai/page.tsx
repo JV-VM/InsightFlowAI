@@ -28,6 +28,14 @@ type AuditItem = {
 };
 
 function getAiBaseUrl() {
+  if (typeof window !== "undefined") {
+    const runtimeUrl = window.__INSIGHTFLOW_CONFIG__?.aiBaseUrl;
+
+    if (runtimeUrl) {
+      return runtimeUrl;
+    }
+  }
+
   return process.env.NEXT_PUBLIC_AI_URL ?? "http://localhost:8002";
 }
 

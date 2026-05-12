@@ -15,7 +15,24 @@ export type AuthMode = "login" | "register";
 
 const sessionKey = "insightflow.auth";
 
+declare global {
+  interface Window {
+    __INSIGHTFLOW_CONFIG__?: {
+      apiBaseUrl?: string;
+      aiBaseUrl?: string;
+    };
+  }
+}
+
 export function getApiBaseUrl() {
+  if (typeof window !== "undefined") {
+    const runtimeUrl = window.__INSIGHTFLOW_CONFIG__?.apiBaseUrl;
+
+    if (runtimeUrl) {
+      return runtimeUrl;
+    }
+  }
+
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 }
 

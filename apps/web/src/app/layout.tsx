@@ -11,9 +11,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const runtimeConfig = {
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
+    aiBaseUrl: process.env.NEXT_PUBLIC_AI_URL ?? "http://localhost:8002",
+  };
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__INSIGHTFLOW_CONFIG__ = ${JSON.stringify(runtimeConfig)};`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
