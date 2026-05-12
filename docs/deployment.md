@@ -36,13 +36,21 @@ The blueprint wires:
 - `JWT_SECRET` as a generated secret
 - `OPENAI_API_KEY` as a manual secret
 
-The frontend build reads `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_AI_URL`, so keep the service names aligned with the blueprint if you rename anything.
+The frontend build reads `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_AI_URL`, and those values are compiled into the client bundle. Render may assign service URLs with suffixes, so after the Blueprint creates the services, copy the actual primary URLs from the dashboard into:
 
-Live endpoints with the current Blueprint service names:
+- `insightflow-web`
+  - `NEXT_PUBLIC_API_URL`
+  - `NEXT_PUBLIC_AI_URL`
+- `insightflow-api`
+  - `WEB_ORIGIN`
+- `insightflow-ai-analyst`
+  - `WEB_ORIGIN`
 
-- App: `https://insightflow-web.onrender.com`
-- API health: `https://insightflow-api.onrender.com/api/health`
-- AI health: `https://insightflow-ai-analyst.onrender.com/health`
+Live endpoints:
+
+- App: use the `insightflow-web` primary URL shown by Render
+- API health: use the `insightflow-api` primary URL shown by Render, with `/api/health`
+- AI health: use the `insightflow-ai-analyst` primary URL shown by Render, with `/health`
 
 Production secrets:
 
