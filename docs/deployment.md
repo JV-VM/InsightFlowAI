@@ -36,11 +36,11 @@ The blueprint wires:
 - `JWT_SECRET` as a generated secret
 - `OPENAI_API_KEY` as a manual secret
 
-The frontend build reads `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_AI_URL`, and those values are compiled into the client bundle. Render may assign service URLs with suffixes, so after the Blueprint creates the services, copy the actual primary URLs from the dashboard into:
+The frontend now injects API and AI base URLs from runtime env vars on the server side. Render may assign service URLs with suffixes, so after the Blueprint creates the services, copy the actual primary URLs from the dashboard into:
 
 - `insightflow-web`
-  - `NEXT_PUBLIC_API_URL`
-  - `NEXT_PUBLIC_AI_URL`
+  - `API_BASE_URL`
+  - `AI_BASE_URL`
 - `insightflow-api`
   - `WEB_ORIGIN`
 - `insightflow-ai-analyst`

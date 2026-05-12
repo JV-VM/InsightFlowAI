@@ -12,8 +12,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const runtimeConfig = {
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
-    aiBaseUrl: process.env.NEXT_PUBLIC_AI_URL ?? "http://localhost:8002",
+    apiBaseUrl:
+      process.env.API_BASE_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://localhost:3001",
+    aiBaseUrl:
+      process.env.AI_BASE_URL ??
+      process.env.NEXT_PUBLIC_AI_URL ??
+      "http://localhost:8002",
   };
 
   return (

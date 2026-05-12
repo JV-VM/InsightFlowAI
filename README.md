@@ -92,8 +92,8 @@ Import the repo into Render as a Blueprint and let it create the stack from `ren
 Render may assign primary URLs with suffixes such as `-xxxx`, so do not assume the public hostnames from the service names alone. After the Blueprint creates the services, copy the actual primary URLs from the Render dashboard into these env vars:
 
 - `insightflow-web`
-  - `NEXT_PUBLIC_API_URL`
-  - `NEXT_PUBLIC_AI_URL`
+  - `API_BASE_URL`
+  - `AI_BASE_URL`
 - `insightflow-api`
   - `WEB_ORIGIN`
 - `insightflow-ai-analyst`
