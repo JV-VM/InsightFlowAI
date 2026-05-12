@@ -117,7 +117,7 @@ export class AuthService {
   }
 
   private getJwtSecret() {
-    return process.env.JWT_SECRET ?? "change-me-in-phase-1";
+    return process.env.JWT_SECRET ?? "development-only-secret-change-me";
   }
 
   private verifyToken(token: string) {
