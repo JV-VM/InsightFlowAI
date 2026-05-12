@@ -295,6 +295,14 @@ export class EtlJobsService {
   }
 
   private getWorkerUrl() {
-    return process.env.ETL_WORKER_URL ?? "http://127.0.0.1:8001";
+    if (process.env.ETL_WORKER_URL) {
+      return process.env.ETL_WORKER_URL;
+    }
+
+    if (process.env.ETL_WORKER_HOSTPORT) {
+      return `http://${process.env.ETL_WORKER_HOSTPORT}`;
+    }
+
+    return "http://127.0.0.1:8001";
   }
 }

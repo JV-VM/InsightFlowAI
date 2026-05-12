@@ -14,9 +14,14 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 app = FastAPI(title="InsightFlow AI Analyst", version="0.1.0")
+default_origins = (
+    ["*"]
+    if os.getenv("RENDER") == "true" and not os.getenv("WEB_ORIGIN")
+    else os.getenv("WEB_ORIGIN", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("WEB_ORIGIN", "http://localhost:3000,http://127.0.0.1:3000").split(","),
+    allow_origins=default_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )

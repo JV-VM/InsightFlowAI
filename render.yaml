@@ -1,0 +1,83 @@
+services:
+  - type: web
+    name: insightflow-web
+    runtime: docker
+    plan: starter
+    dockerContext: .
+    dockerfilePath: apps/web/Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: HOST
+        value: 0.0.0.0
+      - key: NEXT_PUBLIC_API_URL
+        value: https://insightflow-api.onrender.com
+      - key: NEXT_PUBLIC_AI_URL
+        value: https://insightflow-ai-analyst.onrender.com
+
+  - type: web
+    name: insightflow-api
+    runtime: docker
+    plan: starter
+    dockerContext: .
+    dockerfilePath: apps/api/Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: HOST
+        value: 0.0.0.0
+      - key: WEB_ORIGIN
+        value: https://insightflow-web.onrender.com
+      - key: ETL_WORKER_HOSTPORT
+        fromService:
+          name: insightflow-etl-worker
+          type: pserv
+          property: hostport
+      - key: DATABASE_URL
+        fromDatabase:
+          name: insightflow-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: pserv
+    name: insightflow-etl-worker
+    runtime: docker
+    plan: starter
+    dockerContext: .
+    dockerfilePath: services/etl-worker/Dockerfile
+    envVars:
+      - key: PORT
+        value: "8001"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: insightflow-postgres
+          property: connectionString
+
+  - type: web
+    name: insightflow-ai-analyst
+    runtime: docker
+    plan: starter
+    dockerContext: .
+    dockerfilePath: services/ai-analyst/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8002"
+      - key: WEB_ORIGIN
+        value: https://insightflow-web.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: insightflow-postgres
+          property: connectionString
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+
+databases:
+  - name: insightflow-postgres
+    plan: basic-1gb
+    databaseName: insightflow

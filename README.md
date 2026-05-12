@@ -84,6 +84,18 @@ docker compose up -d postgres etl-worker
 ETL_WORKER_URL=http://127.0.0.1:8001 corepack pnpm --dir apps/api start:dev
 ```
 
+## Render Deployment
+
+The repository includes a `render.yaml` Blueprint for the full stack:
+
+- `insightflow-web`: public frontend
+- `insightflow-api`: public API
+- `insightflow-etl-worker`: private ETL service
+- `insightflow-ai-analyst`: public AI service
+- `insightflow-postgres`: managed PostgreSQL
+
+Import the repo into Render as a Blueprint and let it create the stack from `render.yaml`. The blueprint wires the API to the worker and the services to the managed database. The frontend build uses the public API and AI URLs defined in the blueprint, so keep those service names unchanged unless you update the URLs too.
+
 ## Documentation
 
 - [Scope Document](./InsightFlow_AI_Project_Scope.md)

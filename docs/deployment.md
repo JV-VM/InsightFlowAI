@@ -1,14 +1,42 @@
 # Deployment
 
-This document will describe how to run the system locally and how to package it for containerized deployment.
+## Local
 
-## Planned Coverage
+Start the full stack with Docker Compose:
 
-- Docker Compose workflows
-- Service configuration
-- Secrets and environment variables
-- Migration and seed order
-- Production hardening checklist
+```bash
+docker compose up -d --build
+corepack pnpm smoke:local
+```
+
+This brings up PostgreSQL, the frontend, the API, the ETL worker, and the AI analyst.
+
+## Render
+
+The repo root contains `render.yaml`, which defines:
+
+- `insightflow-web` as a public web service
+- `insightflow-api` as a public web service
+- `insightflow-etl-worker` as a private service
+- `insightflow-ai-analyst` as a public web service
+- `insightflow-postgres` as managed PostgreSQL
+
+Deployment order:
+
+1. Import the repo as a Render Blueprint.
+2. Let Render create PostgreSQL first.
+3. Deploy the worker, API, AI service, and frontend.
+4. Confirm the frontend URL and run a smoke test against the live stack.
+
+The blueprint wires:
+
+- `DATABASE_URL` from the managed database
+- `ETL_WORKER_HOSTPORT` from the private worker service
+- `WEB_ORIGIN` for API and AI CORS
+- `JWT_SECRET` as a generated secret
+- `OPENAI_API_KEY` as a manual secret
+
+The frontend build reads `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_AI_URL`, so keep the service names aligned with the blueprint if you rename anything.
 
 ## Reporting Configuration
 
@@ -19,14 +47,3 @@ Power BI connects directly to PostgreSQL. For local demos, expose PostgreSQL on 
 - Schema: `analytics`
 
 The reporting views are named with the `analytics.pbi_*` prefix and are created by database bootstrap.
-
-## Local Release Gate
-
-Before considering the local build releasable, run:
-
-```bash
-docker compose up -d --build
-corepack pnpm smoke:local
-```
-
-The Compose file includes healthchecks for `web`, `api`, `etl-worker`, `ai-analyst`, and PostgreSQL.
