@@ -1,9 +1,14 @@
 :root {
   color-scheme: light;
   font-family:
-    "Sora",
+    "Manrope",
+    "Avenir Next",
     "Segoe UI",
     sans-serif;
+  --text-primary: #16212b;
+  --text-secondary: #52606a;
+  --text-muted: #6f7d86;
+  --surface: rgba(255, 255, 255, 0.82);
 }
 
 * {
@@ -18,8 +23,17 @@ body {
 
 body {
   min-height: 100vh;
+  background: #f5f3ec;
+  color: var(--text-primary);
 }
 
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }

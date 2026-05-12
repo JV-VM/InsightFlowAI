@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearSession, getApiBaseUrl, readSession } from "../../lib/auth";
-import styles from "./page.module.scss";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
+import { getApiBaseUrl, readSession } from "../../lib/auth";
 
 type SeriesPoint = {
   label: string;
@@ -22,7 +23,9 @@ const sections = [
 export default function AnalyticsPage() {
   const router = useRouter();
   const [data, setData] = useState<Record<string, SeriesPoint[]>>({});
-  const [status, setStatus] = useState("Loading analytics");
+  const [status, setStatus] = useState(
+    "Refreshing the analytics mart and loading the latest breakdowns.",
+  );
 
   useEffect(() => {
     if (!readSession()) {
@@ -40,7 +43,7 @@ export default function AnalyticsPage() {
       });
 
       if (!refreshResponse.ok) {
-        throw new Error("Unable to refresh analytics");
+        throw new Error();
       }
 
       const responses = await Promise.all(
@@ -48,7 +51,7 @@ export default function AnalyticsPage() {
       );
 
       if (responses.some((response) => !response.ok)) {
-        throw new Error("Unable to load analytics");
+        throw new Error();
       }
 
       const payloads = await Promise.all(
@@ -61,43 +64,57 @@ export default function AnalyticsPage() {
       });
 
       setData(nextData);
-      setStatus("Analytics refreshed from staging orders");
+      setStatus("Analytics synced from staged order data.");
     } catch {
-      setStatus("Run a pipeline job before viewing analytics");
+      setStatus("Analytics are not available yet. Run a pipeline before opening this view.");
     }
   }
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Phase 4</p>
-          <h1>Analytics</h1>
-          <p>{status}</p>
-        </div>
-        <div className={styles.actions}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/pipelines">Pipelines</Link>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/dashboard" prefetch={false}>
+            Overview
+          </Link>
+          <Link className={workspace.actionLink} href="/reports" prefetch={false}>
+            Reporting views
+          </Link>
+        </>
+      }
+      description="Inspect the warehouse breakdowns that drive KPI cards, AI answers, and downstream reporting."
+      eyebrow="Analytics mart"
+      title="Analytics"
+    >
+      <section className={workspace.grid}>
+        <article className={`${workspace.panel} ${workspace.fullWidth}`}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Refresh state</h2>
+              <p className={workspace.panelDescription}>
+                The analytics refresh is triggered on page load so the warehouse view stays current.
+              </p>
+            </div>
+            <span className={workspace.statusPill}>Auto refresh</span>
+          </div>
+          <p className={workspace.message}>{status}</p>
+        </article>
 
-      <section className={styles.grid}>
         {sections.map((section) => (
-          <article key={section.title}>
-            <h2>{section.title}</h2>
+          <article className={workspace.panel} key={section.title}>
+            <div className={workspace.panelHeader}>
+              <div>
+                <h2 className={workspace.panelTitle}>{section.title}</h2>
+                <p className={workspace.panelDescription}>
+                  Revenue and order volume for this analytics slice.
+                </p>
+              </div>
+            </div>
             <BarList data={data[section.title] ?? []} />
           </article>
         ))}
       </section>
-    </main>
+    </AppShell>
   );
 }
 
@@ -105,20 +122,20 @@ function BarList({ data }: { data: SeriesPoint[] }) {
   const maxValue = Math.max(...data.map((point) => point.value), 1);
 
   if (!data.length) {
-    return <p className={styles.empty}>No rows available.</p>;
+    return <p className={workspace.emptyState}>No rows are available for this slice yet.</p>;
   }
 
   return (
-    <ul className={styles.barList}>
+    <ul className={workspace.barList}>
       {data.map((point) => (
-        <li key={point.label}>
-          <div>
+        <li className={workspace.barItem} key={point.label}>
+          <div className={workspace.barLabelRow}>
             <strong>{point.label}</strong>
-            <span>
+            <span className={workspace.barMeta}>
               {formatCurrency(point.value)} · {point.orders} orders
             </span>
           </div>
-          <meter max={maxValue} value={point.value} />
+          <meter className={workspace.barMeter} max={maxValue} value={point.value} />
         </li>
       ))}
     </ul>

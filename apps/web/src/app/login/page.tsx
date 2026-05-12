@@ -8,9 +8,9 @@ import styles from "./page.module.scss";
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
-  const [name, setName] = useState("Demo Analyst");
-  const [email, setEmail] = useState("analyst@insightflow.local");
-  const [password, setPassword] = useState("insightflow");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,9 +51,13 @@ export default function LoginPage() {
           <p className={styles.eyebrow}>InsightFlow AI</p>
           <h1 id="login-title">Access the workspace</h1>
           <p>
-            Sign in to the Phase 1 shell or create a local development user
-            against the NestJS auth endpoints.
+            Sign in with an existing analyst account or create the first workspace user to start operating the platform.
           </p>
+          <ul className={styles.benefits}>
+            <li>Monitor source connectivity and ETL execution.</li>
+            <li>Review warehouse KPIs, trends, and revenue breakdowns.</li>
+            <li>Use the guarded AI analyst for read-only business questions.</li>
+          </ul>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -81,6 +85,7 @@ export default function LoginPage() {
                 autoComplete="name"
                 minLength={2}
                 onChange={(event) => setName(event.target.value)}
+                placeholder="Data Operations Lead"
                 required
                 value={name}
               />
@@ -89,24 +94,26 @@ export default function LoginPage() {
 
           <label>
             Email
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              type="email"
-              value={email}
+              <input
+                autoComplete="email"
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@company.com"
+                required
+                type="email"
+                value={email}
             />
           </label>
 
           <label>
             Password
-            <input
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              minLength={8}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
+              <input
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                minLength={8}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="At least 8 characters"
+                required
+                type="password"
+                value={password}
             />
           </label>
 

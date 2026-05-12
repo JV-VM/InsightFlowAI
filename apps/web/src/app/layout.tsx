@@ -3,7 +3,7 @@ import "../styles/globals.scss";
 
 export const metadata: Metadata = {
   title: "InsightFlow AI",
-  description: "Business intelligence automation platform",
+  description: "Revenue operations workspace for ETL, analytics, AI-assisted exploration, and reporting.",
 };
 
 export default function RootLayout({

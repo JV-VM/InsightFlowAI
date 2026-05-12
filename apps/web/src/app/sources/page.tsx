@@ -3,8 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearSession, getApiBaseUrl, readSession } from "../../lib/auth";
-import styles from "./page.module.scss";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
+import { getApiBaseUrl, readSession } from "../../lib/auth";
 
 type SourceType = "ECOMMERCE" | "CRM" | "MARKETING" | "SUPPORT" | "CSV";
 
@@ -24,11 +25,11 @@ export default function SourcesPage() {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [sources, setSources] = useState<DataSource[]>([]);
-  const [name, setName] = useState("Demo Commerce Source");
+  const [name, setName] = useState("");
   const [type, setType] = useState<SourceType>("ECOMMERCE");
   const [schedule, setSchedule] = useState("daily");
-  const [configValue, setConfigValue] = useState('{"provider":"shopify","apiKey":"local-demo-key"}');
-  const [status, setStatus] = useState("Loading sources");
+  const [configValue, setConfigValue] = useState("");
+  const [status, setStatus] = useState("Loading configured sources.");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -40,17 +41,17 @@ export default function SourcesPage() {
     }
 
     setToken(session.token);
+    setName("North America Commerce");
+    setConfigValue(getConfigTemplate("ECOMMERCE"));
     void loadSources(session.token);
   }, [router]);
 
   useEffect(() => {
-    if (type === "CSV") {
-      setConfigValue('{"path":"./database/seeds/demo-orders.csv"}');
-      return;
+    setConfigValue(getConfigTemplate(type));
+    if (!name) {
+      setName(getDefaultName(type));
     }
-
-    setConfigValue(`{"provider":"${type.toLowerCase()}-mock","apiKey":"local-demo-key"}`);
-  }, [type]);
+  }, [type, name]);
 
   async function loadSources(authToken: string) {
     setError("");
@@ -59,13 +60,13 @@ export default function SourcesPage() {
     });
 
     if (!response.ok) {
-      setError("Unable to load data sources");
+      setError("We could not load the current source inventory.");
       return;
     }
 
     const payload = (await response.json()) as DataSource[];
     setSources(payload);
-    setStatus(payload.length ? "Sources loaded" : "No sources registered");
+    setStatus(payload.length ? `${payload.length} sources available.` : "No sources configured yet.");
   }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
@@ -76,7 +77,7 @@ export default function SourcesPage() {
     try {
       config = JSON.parse(configValue) as Record<string, unknown>;
     } catch {
-      setError("Configuration must be valid JSON");
+      setError("Configuration JSON must be valid before the source can be saved.");
       return;
     }
 
@@ -90,11 +91,11 @@ export default function SourcesPage() {
     });
 
     if (!response.ok) {
-      setError("Unable to create data source");
+      setError("The source could not be created. Review the payload and try again.");
       return;
     }
 
-    setName(`${type} Source ${sources.length + 2}`);
+    setName(getDefaultName(type));
     await loadSources(token);
   }
 
@@ -106,43 +107,62 @@ export default function SourcesPage() {
     });
 
     if (!response.ok) {
-      setError("Connection test failed");
+      setError("The connection test did not complete successfully.");
       return;
     }
 
     await loadSources(token);
   }
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Phase 2</p>
-          <h1>Data sources</h1>
-        </div>
-        <div className={styles.actions}>
-          <Link href="/dashboard">Dashboard</Link>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/pipelines" prefetch={false}>
+            Run pipelines
+          </Link>
+          <Link className={workspace.actionLink} href="/analytics" prefetch={false}>
+            View analytics
+          </Link>
+        </>
+      }
+      description="Maintain the source catalog for commerce, CRM, marketing, support, and file-based feeds before they enter the warehouse."
+      eyebrow="Source management"
+      title="Data sources"
+    >
+      <section className={workspace.splitGrid}>
+        <form className={`${workspace.panel} ${workspace.stack}`} onSubmit={handleCreate}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Register a source</h2>
+              <p className={workspace.panelDescription}>
+                Define the feed type, its cadence, and the connection payload used by the ingestion flow.
+              </p>
+            </div>
+            <span className={workspace.neutralPill}>Config JSON</span>
+          </div>
 
-      <section className={styles.layout}>
-        <form className={styles.form} onSubmit={handleCreate}>
-          <h2>Register source</h2>
-          <label>
-            Name
-            <input onChange={(event) => setName(event.target.value)} required value={name} />
+          <label className={workspace.field}>
+            Source name
+            <input
+              className={workspace.input}
+              onChange={(event) => setName(event.target.value)}
+              required
+              value={name}
+            />
           </label>
-          <label>
-            Type
-            <select onChange={(event) => setType(event.target.value as SourceType)} value={type}>
+
+          <label className={workspace.field}>
+            Source type
+            <select
+              className={workspace.select}
+              onChange={(event) => {
+                const nextType = event.target.value as SourceType;
+                setType(nextType);
+                setName(getDefaultName(nextType));
+              }}
+              value={type}
+            >
               {sourceTypes.map((sourceType) => (
                 <option key={sourceType} value={sourceType}>
                   {sourceType}
@@ -150,53 +170,131 @@ export default function SourcesPage() {
               ))}
             </select>
           </label>
-          <label>
-            Schedule
-            <input onChange={(event) => setSchedule(event.target.value)} value={schedule} />
+
+          <label className={workspace.field}>
+            Refresh cadence
+            <input
+              className={workspace.input}
+              onChange={(event) => setSchedule(event.target.value)}
+              value={schedule}
+            />
           </label>
-          <label>
-            Configuration JSON
+
+          <label className={workspace.field}>
+            Connection payload
             <textarea
+              className={workspace.textarea}
               onChange={(event) => setConfigValue(event.target.value)}
-              rows={6}
+              rows={8}
               value={configValue}
             />
           </label>
-          {error ? <p className={styles.error}>{error}</p> : null}
-          <button className={styles.primary} type="submit">
-            Create source
-          </button>
+
+          <p className={workspace.fieldHint}>{getConfigHint(type)}</p>
+          {error ? <p className={workspace.error}>{error}</p> : null}
+
+          <div className={workspace.actionsRow}>
+            <button className={workspace.primaryButton} type="submit">
+              Save source
+            </button>
+          </div>
         </form>
 
-        <section className={styles.list} aria-label="Registered data sources">
-          <div className={styles.listHeader}>
-            <h2>Registered sources</h2>
-            <span>{status}</span>
+        <section className={`${workspace.panel} ${workspace.stack}`} aria-label="Registered data sources">
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Source inventory</h2>
+              <p className={workspace.panelDescription}>
+                Review the current connection state before triggering extraction or refresh work.
+              </p>
+            </div>
+            <span className={workspace.neutralPill}>{status}</span>
           </div>
 
           {sources.length ? (
-            sources.map((source) => (
-              <article className={styles.source} key={source.id}>
-                <div>
-                  <span className={styles.status}>{source.status}</span>
-                  <h3>{source.name}</h3>
-                  <p>
+            <div className={workspace.stack}>
+              {sources.map((source) => (
+                <article className={workspace.listItem} key={source.id}>
+                  <div className={workspace.helperRow}>
+                    <span className={statusClassName(source.status)}>{source.status}</span>
+                    <button
+                      className={workspace.secondaryButton}
+                      onClick={() => handleTest(source.id)}
+                      type="button"
+                    >
+                      Test connection
+                    </button>
+                  </div>
+                  <strong className={workspace.itemTitle}>{source.name}</strong>
+                  <p className={workspace.itemMeta}>
                     {source.type} · {source.schedule}
+                    {source.lastConnectionTestAt
+                      ? ` · tested ${new Date(source.lastConnectionTestAt).toLocaleString()}`
+                      : ""}
                   </p>
-                  {source.lastConnectionMessage ? (
-                    <p className={styles.message}>{source.lastConnectionMessage}</p>
-                  ) : null}
-                </div>
-                <button onClick={() => handleTest(source.id)} type="button">
-                  Test
-                </button>
-              </article>
-            ))
+                  <p className={workspace.message}>
+                    {source.lastConnectionMessage ?? "No connection result has been recorded yet."}
+                  </p>
+                </article>
+              ))}
+            </div>
           ) : (
-            <p className={styles.empty}>Create a fake API source or CSV source to begin.</p>
+            <p className={workspace.emptyState}>
+              No sources are registered yet. Start with a CSV feed or a line-of-business connector.
+            </p>
           )}
         </section>
       </section>
-    </main>
+    </AppShell>
   );
+}
+
+function getDefaultName(type: SourceType) {
+  switch (type) {
+    case "CSV":
+      return "Orders CSV feed";
+    case "CRM":
+      return "Pipeline CRM";
+    case "MARKETING":
+      return "Paid media performance";
+    case "SUPPORT":
+      return "Customer support queue";
+    default:
+      return "North America Commerce";
+  }
+}
+
+function getConfigTemplate(type: SourceType) {
+  if (type === "CSV") {
+    return JSON.stringify({ path: "./database/seeds/demo-orders.csv" }, null, 2);
+  }
+
+  return JSON.stringify(
+    {
+      provider: `${type.toLowerCase()}-primary`,
+      apiKey: "replace-with-credential",
+    },
+    null,
+    2,
+  );
+}
+
+function getConfigHint(type: SourceType) {
+  if (type === "CSV") {
+    return "Use a repository-relative file path for batch imports packaged with the ETL worker image.";
+  }
+
+  return "Store only the connection payload expected by the backend connector. Replace sample keys with managed credentials in production.";
+}
+
+function statusClassName(status: DataSource["status"]) {
+  if (status === "CONNECTED") {
+    return workspace.statusPill;
+  }
+
+  if (status === "FAILED") {
+    return workspace.dangerPill;
+  }
+
+  return workspace.neutralPill;
 }

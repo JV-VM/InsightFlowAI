@@ -3,7 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearSession, readSession } from "../../lib/auth";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
+import { readSession } from "../../lib/auth";
 import styles from "./page.module.scss";
 
 type Answer = {
@@ -82,105 +84,143 @@ export default function AiAnalystPage() {
       const payload = (await response.json()) as Answer;
 
       if (!response.ok) {
-        throw new Error("Unable to answer question");
+        throw new Error();
       }
 
       setAnswer(payload);
       await loadAudit();
     } catch {
-      setError("Unable to reach the AI analyst service");
+      setError("The AI analyst service could not answer the request right now.");
     } finally {
       setIsAsking(false);
     }
   }
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Phase 5</p>
-          <h1>AI Analyst</h1>
-        </div>
-        <div className={styles.actions}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/analytics">Analytics</Link>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/analytics" prefetch={false}>
+            Analytics slices
+          </Link>
+          <Link className={workspace.actionLink} href="/reports" prefetch={false}>
+            Reporting contract
+          </Link>
+        </>
+      }
+      description="Query the analytics layer through a guarded assistant that only supports read-only analytical intents."
+      eyebrow="Analyst assistant"
+      title="AI Analyst"
+    >
+      <section className={workspace.grid}>
+        <section className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Ask a question</h2>
+              <p className={workspace.panelDescription}>
+                Use natural language prompts for supported revenue, product, region, campaign, or daily trend questions.
+              </p>
+            </div>
+            <span className={workspace.statusPill}>Read only</span>
+          </div>
 
-      <section className={styles.layout}>
-        <section className={styles.askPanel}>
-          <form onSubmit={handleSubmit}>
-            <label>
+          <form className={workspace.stack} onSubmit={handleSubmit}>
+            <label className={workspace.field}>
               Question
               <textarea
+                className={workspace.textarea}
                 onChange={(event) => setQuestion(event.target.value)}
-                rows={4}
+                rows={5}
                 value={question}
               />
             </label>
-            <button disabled={isAsking || !question.trim()} type="submit">
-              {isAsking ? "Asking..." : "Ask analyst"}
-            </button>
+            <div className={workspace.actionsRow}>
+              <button
+                className={workspace.primaryButton}
+                disabled={isAsking || !question.trim()}
+                type="submit"
+              >
+                {isAsking ? "Running query..." : "Ask analyst"}
+              </button>
+            </div>
           </form>
 
-          <div className={styles.suggestions}>
+          <div className={workspace.actionsRow}>
             {suggestions.map((item) => (
-              <button key={item} onClick={() => setQuestion(item)} type="button">
+              <button
+                className={workspace.secondaryButton}
+                key={item}
+                onClick={() => setQuestion(item)}
+                type="button"
+              >
                 {item}
               </button>
             ))}
           </div>
 
-          {error ? <p className={styles.error}>{error}</p> : null}
+          {error ? <p className={workspace.error}>{error}</p> : null}
         </section>
 
-        <section className={styles.answerPanel}>
-          <h2>Answer</h2>
+        <section className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Answer</h2>
+              <p className={workspace.panelDescription}>
+                Structured results, query preview, and the resolved intent appear here.
+              </p>
+            </div>
+          </div>
+
           {answer ? (
-            <>
-              <div className={styles.statusLine}>
-                <span>{answer.status}</span>
-                {answer.intent ? <strong>{answer.intent}</strong> : null}
+            <div className={workspace.stack}>
+              <div className={workspace.summaryRow}>
+                <span className={statusClassName(answer.status)}>{answer.status}</span>
+                {answer.intent ? <span className={workspace.neutralPill}>{answer.intent}</span> : null}
               </div>
-              <p>{answer.summary}</p>
+              <p className={workspace.message}>{answer.summary}</p>
               {answer.sqlPreview ? (
-                <pre>
+                <pre className={styles.sqlPreview}>
                   <code>{answer.sqlPreview}</code>
                 </pre>
               ) : null}
               <ResultTable rows={answer.data} />
-            </>
+            </div>
           ) : (
-            <p className={styles.empty}>Ask a supported analytics question to see results.</p>
+            <p className={workspace.emptyState}>
+              Submit a supported analytical question to generate a result set.
+            </p>
           )}
         </section>
 
-        <section className={styles.auditPanel}>
-          <h2>Audit log</h2>
+        <section className={`${workspace.panel} ${workspace.fullWidth}`}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Audit log</h2>
+              <p className={workspace.panelDescription}>
+                Every request is logged with its resolved status and summary.
+              </p>
+            </div>
+          </div>
+
           {auditItems.length ? (
-            <ol>
+            <ol className={workspace.cleanList}>
               {auditItems.map((item) => (
-                <li key={item.id}>
-                  <span>{item.status}</span>
-                  <strong>{item.question}</strong>
-                  <p>{item.summary}</p>
+                <li className={workspace.listItem} key={item.id}>
+                  <div className={workspace.summaryRow}>
+                    <span className={statusClassName(item.status)}>{item.status}</span>
+                    {item.intent ? <span className={workspace.neutralPill}>{item.intent}</span> : null}
+                  </div>
+                  <strong className={workspace.itemTitle}>{item.question}</strong>
+                  <p className={workspace.message}>{item.summary}</p>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className={styles.empty}>No analyst questions recorded yet.</p>
+            <p className={workspace.emptyState}>No analyst questions have been recorded yet.</p>
           )}
         </section>
       </section>
-    </main>
+    </AppShell>
   );
 }
 
@@ -192,8 +232,8 @@ function ResultTable({ rows }: { rows: Record<string, string | number | null>[] 
   const columns = Object.keys(rows[0]);
 
   return (
-    <div className={styles.tableWrap}>
-      <table>
+    <div className={workspace.tableWrap}>
+      <table className={workspace.table}>
         <thead>
           <tr>
             {columns.map((column) => (
@@ -213,4 +253,16 @@ function ResultTable({ rows }: { rows: Record<string, string | number | null>[] 
       </table>
     </div>
   );
+}
+
+function statusClassName(status: string) {
+  if (status === "answered") {
+    return workspace.statusPill;
+  }
+
+  if (status === "blocked") {
+    return workspace.dangerPill;
+  }
+
+  return workspace.neutralPill;
 }

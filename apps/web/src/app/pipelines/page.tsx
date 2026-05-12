@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearSession, getApiBaseUrl, readSession } from "../../lib/auth";
-import styles from "./page.module.scss";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
+import { getApiBaseUrl, readSession } from "../../lib/auth";
 
 type DataSource = {
   id: string;
@@ -42,11 +43,7 @@ export default function PipelinesPage() {
   const [selectedJob, setSelectedJob] = useState<EtlJob | null>(null);
   const [error, setError] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-
-  const connectedSources = useMemo(
-    () => sources.filter((source) => source.status === "CONNECTED"),
-    [sources],
-  );
+  const connectedSources = sources.filter((source) => source.status === "CONNECTED");
 
   useEffect(() => {
     const session = readSession();
@@ -73,7 +70,7 @@ export default function PipelinesPage() {
     ]);
 
     if (!sourceResponse.ok || !jobResponse.ok) {
-      setError("Unable to load pipeline data");
+      setError("Pipeline data could not be loaded from the API.");
       return;
     }
 
@@ -88,7 +85,7 @@ export default function PipelinesPage() {
 
   async function handleRun() {
     if (!selectedSourceId) {
-      setError("Connect a data source before running ETL");
+      setError("Connect at least one source before running the orders pipeline.");
       return;
     }
 
@@ -105,7 +102,7 @@ export default function PipelinesPage() {
     const payload = (await response.json()) as EtlJob;
 
     if (!response.ok) {
-      setError("Unable to run ETL job");
+      setError("The ETL run did not complete. Review the worker and API logs.");
       setIsRunning(false);
       return;
     }
@@ -119,102 +116,199 @@ export default function PipelinesPage() {
     const response = await fetch(`${getApiBaseUrl()}/api/etl-jobs/${id}`);
 
     if (!response.ok) {
-      setError("Unable to load ETL logs");
+      setError("The selected job log could not be loaded.");
       return;
     }
 
     setSelectedJob((await response.json()) as EtlJob);
   }
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Phase 3</p>
-          <h1>Pipeline runs</h1>
-        </div>
-        <div className={styles.actions}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/sources">Sources</Link>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/sources" prefetch={false}>
+            Source inventory
+          </Link>
+          <Link className={workspace.actionLink} href="/analytics" prefetch={false}>
+            Analytics output
+          </Link>
+        </>
+      }
+      description="Execute the orders pipeline, review the latest ingestion runs, and inspect stage-level log output from the ETL service."
+      eyebrow="Pipeline operations"
+      title="Pipeline runs"
+    >
+      <section className={workspace.grid}>
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Launch a run</h2>
+              <p className={workspace.panelDescription}>
+                Only connected sources are available for execution.
+              </p>
+            </div>
+            <span className={workspace.neutralPill}>{connectedSources.length} ready</span>
+          </div>
 
-      <section className={styles.controls}>
-        <label>
-          Source
-          <select
-            onChange={(event) => setSelectedSourceId(event.target.value)}
-            value={selectedSourceId}
-          >
-            {connectedSources.map((source) => (
-              <option key={source.id} value={source.id}>
-                {source.name} ({source.type})
-              </option>
-            ))}
-          </select>
-        </label>
-        <button disabled={isRunning || !selectedSourceId} onClick={handleRun} type="button">
-          {isRunning ? "Running..." : "Run orders ETL"}
-        </button>
-        {error ? <p className={styles.error}>{error}</p> : null}
-      </section>
+          <div className={workspace.stack}>
+            <label className={workspace.field}>
+              Connected source
+              <select
+                className={workspace.select}
+                onChange={(event) => setSelectedSourceId(event.target.value)}
+                value={selectedSourceId}
+              >
+                {connectedSources.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.name} ({source.type})
+                  </option>
+                ))}
+              </select>
+            </label>
 
-      <section className={styles.layout}>
-        <section className={styles.list} aria-label="ETL jobs">
-          <h2>Recent jobs</h2>
-          {jobs.length ? (
-            jobs.map((job) => (
+            <div className={workspace.actionsRow}>
               <button
-                className={selectedJob?.id === job.id ? styles.selectedJob : ""}
-                key={job.id}
-                onClick={() => handleSelectJob(job.id)}
+                className={workspace.primaryButton}
+                disabled={isRunning || !selectedSourceId}
+                onClick={handleRun}
                 type="button"
               >
-                <span>{job.status}</span>
-                <strong>{job.dataSourceName ?? "Deleted source"}</strong>
-                <small>
-                  {job.pipeline} · {job.processedRows} processed ·{" "}
-                  {new Date(job.createdAt).toLocaleString()}
-                </small>
+                {isRunning ? "Running pipeline..." : "Run orders pipeline"}
               </button>
-            ))
+            </div>
+
+            {error ? <p className={workspace.error}>{error}</p> : null}
+          </div>
+        </article>
+
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Run summary</h2>
+              <p className={workspace.panelDescription}>
+                Select any recent execution to inspect its processing detail.
+              </p>
+            </div>
+            <span className={workspace.neutralPill}>{jobs.length} recent jobs</span>
+          </div>
+
+          <div className={workspace.summaryRow}>
+            <span className={workspace.statusPill}>Orders pipeline</span>
+            <span className={workspace.neutralPill}>
+              {selectedJob ? selectedJob.status : "No job selected"}
+            </span>
+          </div>
+        </article>
+
+        <section className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Recent jobs</h2>
+              <p className={workspace.panelDescription}>
+                Each job includes warehouse load counts and stage logs.
+              </p>
+            </div>
+          </div>
+          {jobs.length ? (
+            <div className={workspace.stack}>
+              {jobs.map((job) => (
+                <button
+                  className={`${workspace.listItem} ${
+                    selectedJob?.id === job.id ? workspace.selectedItem : ""
+                  }`}
+                  key={job.id}
+                  onClick={() => handleSelectJob(job.id)}
+                  type="button"
+                >
+                  <span className={statusClassName(job.status)}>{job.status}</span>
+                  <strong className={workspace.itemTitle}>
+                    {job.dataSourceName ?? "Removed source"}
+                  </strong>
+                  <p className={workspace.itemMeta}>
+                    {job.pipeline} · {job.processedRows} processed · {job.rejectedRows} rejected
+                  </p>
+                  <p className={workspace.message}>
+                    {new Date(job.createdAt).toLocaleString()}
+                  </p>
+                </button>
+              ))}
+            </div>
           ) : (
-            <p className={styles.empty}>Run the first ETL job from a connected source.</p>
+            <p className={workspace.emptyState}>
+              No ETL run has been recorded yet. Start with a connected source.
+            </p>
           )}
         </section>
 
-        <section className={styles.detail} aria-label="ETL job logs">
-          <h2>Job log</h2>
+        <section className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Execution log</h2>
+              <p className={workspace.panelDescription}>
+                Track what the worker did across extract, validate, transform, and load stages.
+              </p>
+            </div>
+          </div>
+
           {selectedJob ? (
-            <>
-              <div className={styles.summary}>
-                <span>{selectedJob.status}</span>
-                <strong>{selectedJob.processedRows} processed</strong>
-                <strong>{selectedJob.rejectedRows} rejected</strong>
+            <div className={workspace.stack}>
+              <div className={workspace.summaryRow}>
+                <span className={statusClassName(selectedJob.status)}>{selectedJob.status}</span>
+                <span className={workspace.neutralPill}>
+                  {selectedJob.processedRows} processed
+                </span>
+                <span className={workspace.neutralPill}>
+                  {selectedJob.rejectedRows} rejected
+                </span>
               </div>
-              <ol>
-                {(selectedJob.logs ?? []).map((log) => (
-                  <li key={log.id}>
-                    <span>{log.level}</span>
-                    <strong>{log.stage}</strong>
-                    <p>{log.message}</p>
-                  </li>
-                ))}
-              </ol>
-            </>
+
+              {(selectedJob.logs ?? []).length ? (
+                <ol className={workspace.cleanList}>
+                  {(selectedJob.logs ?? []).map((log) => (
+                    <li className={workspace.listItem} key={log.id}>
+                      <span
+                        className={
+                          log.level === "ERROR"
+                            ? workspace.dangerPill
+                            : log.level === "WARN"
+                              ? workspace.neutralPill
+                              : workspace.statusPill
+                        }
+                      >
+                        {log.level}
+                      </span>
+                      <strong className={workspace.itemTitle}>{log.stage}</strong>
+                      <p className={workspace.message}>{log.message}</p>
+                      <p className={workspace.itemMeta}>
+                        {new Date(log.createdAt).toLocaleString()}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className={workspace.emptyState}>
+                  This job returned without any persisted stage logs.
+                </p>
+              )}
+            </div>
           ) : (
-            <p className={styles.empty}>Select a job to inspect stage logs.</p>
+            <p className={workspace.emptyState}>Choose a job from the left to inspect its log.</p>
           )}
         </section>
       </section>
-    </main>
+    </AppShell>
   );
+}
+
+function statusClassName(status: EtlJob["status"]) {
+  if (status === "SUCCEEDED") {
+    return workspace.statusPill;
+  }
+
+  if (status === "FAILED") {
+    return workspace.dangerPill;
+  }
+
+  return workspace.neutralPill;
 }

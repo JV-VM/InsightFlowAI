@@ -2,9 +2,9 @@ import Link from "next/link";
 import styles from "./page.module.scss";
 
 const platformAreas = [
-  "Register sources, validate connections, and trigger ETL jobs.",
-  "Load order data into raw, staging, and analytics PostgreSQL layers.",
-  "Review KPIs, revenue breakdowns, AI answers, and reporting contracts.",
+  "Connect operational data sources and verify them before ingestion.",
+  "Run warehouse pipelines that land data into raw, staging, and analytics layers.",
+  "Operate dashboards, analyst workflows, and reporting from one workspace.",
 ];
 
 const appSections = [
@@ -18,9 +18,9 @@ const appSections = [
 ];
 
 const runtimeServices = [
-  "Next.js frontend served from Render",
-  "NestJS API with PostgreSQL-backed auth and analytics endpoints",
-  "FastAPI ETL worker on the private network",
+  "Next.js workspace served from Render",
+  "NestJS API with PostgreSQL-backed auth, ETL, and analytics endpoints",
+  "FastAPI ETL worker on the private deployment network",
   "FastAPI AI analyst with guarded read-only queries",
 ];
 
@@ -35,22 +35,26 @@ export default function HomePage() {
           AI-assisted exploration, and reporting.
         </p>
         <div className={styles.actions}>
-          <Link href="/login">Open app</Link>
-          <Link href="/dashboard">View dashboard</Link>
+          <Link href="/login" prefetch={false}>
+            Enter workspace
+          </Link>
+          <Link href="/dashboard" prefetch={false}>
+            Open dashboard
+          </Link>
         </div>
       </section>
 
       <section className={styles.metrics}>
         <article className={styles.metricCard}>
-          <span>Stack</span>
+          <span>Platform</span>
           <strong>Next.js + NestJS + FastAPI</strong>
         </article>
         <article className={styles.metricCard}>
-          <span>Data</span>
+          <span>Warehouse</span>
           <strong>PostgreSQL raw, staging, analytics</strong>
         </article>
         <article className={styles.metricCard}>
-          <span>Deploy</span>
+          <span>Runtime</span>
           <strong>Render Blueprint runtime</strong>
         </article>
       </section>
@@ -70,7 +74,7 @@ export default function HomePage() {
           <ul>
             {appSections.map((section) => (
               <li key={section.path}>
-                <Link href={section.path}>
+                <Link href={section.path} prefetch={false}>
                   <code>{section.path}</code> {section.label}
                 </Link>
               </li>

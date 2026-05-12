@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
 import {
   AuthUser,
   clearSession,
@@ -26,24 +28,40 @@ type SeriesPoint = {
   orders: number;
 };
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", enabled: true },
-  { label: "Sources", href: "/sources", enabled: true },
-  { label: "Pipelines", href: "/pipelines", enabled: true },
-  { label: "Analytics", href: "/analytics", enabled: true },
-  { label: "AI Analyst", href: "/ai", enabled: true },
-  { label: "Reports", href: "/reports", enabled: true },
+const quickLinks = [
+  {
+    title: "Manage sources",
+    description: "Register connectors, review connection status, and prepare inputs.",
+    href: "/sources",
+  },
+  {
+    title: "Run pipelines",
+    description: "Trigger ETL jobs and inspect stage-level execution logs.",
+    href: "/pipelines",
+  },
+  {
+    title: "Explore analytics",
+    description: "Open the revenue views used by dashboards and reporting.",
+    href: "/analytics",
+  },
+  {
+    title: "Ask the analyst",
+    description: "Query the warehouse through guarded read-only analytical prompts.",
+    href: "/ai",
+  },
 ];
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [status, setStatus] = useState("Checking session");
+  const [status, setStatus] = useState("Checking your workspace session.");
   const [overview, setOverview] = useState<Overview | null>(null);
   const [products, setProducts] = useState<SeriesPoint[]>([]);
   const [regions, setRegions] = useState<SeriesPoint[]>([]);
   const [campaigns, setCampaigns] = useState<SeriesPoint[]>([]);
-  const [analyticsStatus, setAnalyticsStatus] = useState("Loading analytics");
+  const [analyticsStatus, setAnalyticsStatus] = useState(
+    "Refreshing the analytics mart from the latest staged orders.",
+  );
 
   useEffect(() => {
     const session = readSession();
@@ -55,10 +73,9 @@ export default function DashboardPage() {
 
     fetchProfile(session.token)
       .then((profile) => {
-        const refreshedSession = { ...session, user: profile };
-        writeSession(refreshedSession);
+        writeSession({ ...session, user: profile });
         setUser(profile);
-        setStatus("Authenticated");
+        setStatus("Workspace session active.");
         void loadAnalytics();
       })
       .catch(() => {
@@ -67,11 +84,6 @@ export default function DashboardPage() {
       });
   }, [router]);
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   async function loadAnalytics() {
     try {
       const refreshResponse = await fetch(`${getApiBaseUrl()}/api/analytics/refresh`, {
@@ -79,7 +91,7 @@ export default function DashboardPage() {
       });
 
       if (!refreshResponse.ok) {
-        throw new Error("Unable to refresh analytics");
+        throw new Error();
       }
 
       const [overviewResponse, productResponse, regionResponse, campaignResponse] =
@@ -96,7 +108,7 @@ export default function DashboardPage() {
         !regionResponse.ok ||
         !campaignResponse.ok
       ) {
-        throw new Error("Unable to load analytics");
+        throw new Error();
       }
 
       const [overviewPayload, productPayload, regionPayload, campaignPayload] =
@@ -111,9 +123,9 @@ export default function DashboardPage() {
       setProducts(productPayload);
       setRegions(regionPayload);
       setCampaigns(campaignPayload);
-      setAnalyticsStatus("Analytics refreshed");
+      setAnalyticsStatus("Analytics refreshed from the current warehouse snapshot.");
     } catch {
-      setAnalyticsStatus("Run an ETL job to populate analytics");
+      setAnalyticsStatus("No analytics snapshot is available yet. Run a pipeline and refresh.");
     }
   }
 
@@ -126,104 +138,123 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className={styles.shell}>
-      <aside className={styles.sidebar} aria-label="Primary navigation">
-        <div>
-          <p className={styles.brand}>InsightFlow AI</p>
-          <nav>
-            {navItems.map((item) => (
-              item.enabled ? (
-                <Link
-                  className={item.label === "Dashboard" ? styles.activeNav : ""}
-                  href={item.href}
-                  key={item.label}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <button disabled key={item.label} type="button">
-                  {item.label}
-                </button>
-              )
-            ))}
-          </nav>
-        </div>
-        <button className={styles.logout} onClick={handleLogout} type="button">
-          Logout
-        </button>
-      </aside>
-
-      <section className={styles.content}>
-        <header className={styles.header}>
-          <div>
-            <p className={styles.eyebrow}>Analytics dashboard</p>
-            <h1>Welcome, {user.name}</h1>
-          </div>
-          <div className={styles.profile}>
-            <strong>{user.role}</strong>
-            <span>{user.email}</span>
-          </div>
-        </header>
-
-        <section className={styles.metrics} aria-label="Business KPI metrics">
-          <article className={styles.metric}>
-            <span>Revenue</span>
-            <strong>{formatCurrency(overview?.totalRevenue ?? 0)}</strong>
-            <p>Total sales</p>
-          </article>
-          <article className={styles.metric}>
-            <span>Orders</span>
-            <strong>{overview?.totalOrders ?? 0}</strong>
-            <p>Processed orders</p>
-          </article>
-          <article className={styles.metric}>
-            <span>Customers</span>
-            <strong>{overview?.totalCustomers ?? 0}</strong>
-            <p>Unique buyers</p>
-          </article>
-          <article className={styles.metric}>
-            <span>Average</span>
-            <strong>{formatCurrency(overview?.averageOrderValue ?? 0)}</strong>
-            <p>Order value</p>
-          </article>
-        </section>
-
-        <section className={styles.workspace}>
-          <article className={styles.panelWide}>
-            <div className={styles.panelHeader}>
-              <h2>Revenue by product</h2>
-              <span>{analyticsStatus}</span>
-            </div>
-            <BarList data={products} />
-          </article>
-          <article>
-            <div className={styles.panelHeader}>
-              <h2>Revenue by region</h2>
-            </div>
-            <BarList data={regions} />
-          </article>
-          <article className={styles.panelWide}>
-            <div className={styles.panelHeader}>
-              <h2>Campaign performance</h2>
-            </div>
-            <BarList data={campaigns} />
-          </article>
-          <article>
-            <h2>Session</h2>
-            <dl>
-              <div>
-                <dt>Status</dt>
-                <dd>{status}</dd>
-              </div>
-              <div>
-                <dt>User</dt>
-                <dd>{user.email}</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/analytics" prefetch={false}>
+            Revenue views
+          </Link>
+          <Link className={workspace.actionLink} href="/reports" prefetch={false}>
+            Reporting contract
+          </Link>
+        </>
+      }
+      description="Monitor KPI health, move between operational workflows, and review the latest warehouse outputs from one workspace."
+      eyebrow="Executive overview"
+      title={`Welcome back, ${user.name}`}
+    >
+      <section className={workspace.metricGrid} aria-label="Business KPI metrics">
+        <article className={workspace.metric}>
+          <span className={workspace.metricLabel}>Revenue</span>
+          <strong className={workspace.metricValue}>
+            {formatCurrency(overview?.totalRevenue ?? 0)}
+          </strong>
+          <p className={workspace.metricNote}>Gross sales currently available in analytics.</p>
+        </article>
+        <article className={workspace.metric}>
+          <span className={workspace.metricLabel}>Orders</span>
+          <strong className={workspace.metricValue}>{overview?.totalOrders ?? 0}</strong>
+          <p className={workspace.metricNote}>Order rows loaded into the fact table.</p>
+        </article>
+        <article className={workspace.metric}>
+          <span className={workspace.metricLabel}>Customers</span>
+          <strong className={workspace.metricValue}>{overview?.totalCustomers ?? 0}</strong>
+          <p className={workspace.metricNote}>Distinct buyers represented in analytics.</p>
+        </article>
+        <article className={workspace.metric}>
+          <span className={workspace.metricLabel}>Average order value</span>
+          <strong className={workspace.metricValue}>
+            {formatCurrency(overview?.averageOrderValue ?? 0)}
+          </strong>
+          <p className={workspace.metricNote}>Mean revenue per order.</p>
+        </article>
       </section>
-    </main>
+
+      <section className={workspace.grid}>
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Revenue by product</h2>
+              <p className={workspace.panelDescription}>{analyticsStatus}</p>
+            </div>
+            <span className={workspace.statusPill}>Live analytics</span>
+          </div>
+          <BarList data={products} />
+        </article>
+
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Workspace status</h2>
+              <p className={workspace.panelDescription}>
+                Session and access context for the current analyst.
+              </p>
+            </div>
+          </div>
+          <div className={workspace.stack}>
+            <div className={styles.identityRow}>
+              <span className={workspace.neutralPill}>Session active</span>
+              <strong>{user.role}</strong>
+            </div>
+            <p className={workspace.message}>{user.email}</p>
+            <p className={workspace.message}>{status}</p>
+          </div>
+        </article>
+
+        <article className={`${workspace.panel} ${workspace.fullWidth}`}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Operational workflow</h2>
+              <p className={workspace.panelDescription}>
+                Jump directly into the next step in the data operations cycle.
+              </p>
+            </div>
+          </div>
+          <div className={styles.quickLinkGrid}>
+            {quickLinks.map((item) => (
+              <Link className={styles.quickLinkCard} href={item.href} key={item.href} prefetch={false}>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </article>
+
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Revenue by region</h2>
+              <p className={workspace.panelDescription}>
+                Compare sales distribution across commercial territories.
+              </p>
+            </div>
+          </div>
+          <BarList data={regions} />
+        </article>
+
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Campaign performance</h2>
+              <p className={workspace.panelDescription}>
+                Review campaign impact on the current revenue mix.
+              </p>
+            </div>
+          </div>
+          <BarList data={campaigns} />
+        </article>
+      </section>
+    </AppShell>
   );
 }
 
@@ -231,20 +262,20 @@ function BarList({ data }: { data: SeriesPoint[] }) {
   const maxValue = Math.max(...data.map((point) => point.value), 1);
 
   if (!data.length) {
-    return <p className={styles.empty}>No analytics rows available.</p>;
+    return <p className={workspace.emptyState}>No analytics rows are available yet.</p>;
   }
 
   return (
-    <ul className={styles.barList}>
+    <ul className={workspace.barList}>
       {data.map((point) => (
-        <li key={point.label}>
-          <div>
+        <li className={workspace.barItem} key={point.label}>
+          <div className={workspace.barLabelRow}>
             <strong>{point.label}</strong>
-            <span>
+            <span className={workspace.barMeta}>
               {formatCurrency(point.value)} · {point.orders} orders
             </span>
           </div>
-          <meter max={maxValue} value={point.value} />
+          <meter className={workspace.barMeter} max={maxValue} value={point.value} />
         </li>
       ))}
     </ul>

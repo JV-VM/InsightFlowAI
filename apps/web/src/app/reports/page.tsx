@@ -3,8 +3,9 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearSession, readSession } from "../../lib/auth";
-import styles from "./page.module.scss";
+import { AppShell } from "../_components/app-shell";
+import workspace from "../workspace.module.scss";
+import { readSession } from "../../lib/auth";
 
 const views = [
   "analytics.pbi_sales_overview",
@@ -47,83 +48,96 @@ export default function ReportsPage() {
     }
   }, [router]);
 
-  function handleLogout() {
-    clearSession();
-    router.replace("/login");
-  }
-
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Phase 6</p>
-          <h1>Reports</h1>
-          <p>Power BI reporting contracts and rebuild instructions.</p>
-        </div>
-        <div className={styles.actions}>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/analytics">Analytics</Link>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <section className={styles.grid}>
-        <article>
-          <h2>Connection</h2>
-          <dl>
+    <AppShell
+      actions={
+        <>
+          <Link className={workspace.actionLink} href="/dashboard" prefetch={false}>
+            Executive overview
+          </Link>
+          <Link className={workspace.actionLink} href="/analytics" prefetch={false}>
+            Analytics source
+          </Link>
+        </>
+      }
+      description="Use this page as the reporting contract for Power BI or any external BI surface consuming the warehouse views."
+      eyebrow="Reporting layer"
+      title="Reports"
+    >
+      <section className={workspace.grid}>
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
             <div>
-              <dt>Host</dt>
-              <dd>localhost</dd>
+              <h2 className={workspace.panelTitle}>Connection model</h2>
+              <p className={workspace.panelDescription}>
+                The reporting layer is designed around the managed PostgreSQL analytics schema used by the deployment environment.
+              </p>
             </div>
-            <div>
-              <dt>Port</dt>
-              <dd>5432</dd>
-            </div>
-            <div>
-              <dt>Database</dt>
-              <dd>insightflow</dd>
-            </div>
-            <div>
-              <dt>Schema</dt>
-              <dd>analytics</dd>
-            </div>
-          </dl>
+          </div>
+          <div className={workspace.stack}>
+            <p className={workspace.message}>Database: PostgreSQL</p>
+            <p className={workspace.message}>Schema: analytics</p>
+            <p className={workspace.message}>
+              Access method: use the deployment-managed reporting connection string for the active environment.
+            </p>
+          </div>
         </article>
 
-        <article>
-          <h2>Power BI views</h2>
-          <ul>
+        <article className={workspace.panel}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Published views</h2>
+              <p className={workspace.panelDescription}>
+                Stable view names available to external reporting tools.
+              </p>
+            </div>
+          </div>
+          <ul className={workspace.cleanList}>
             {views.map((view) => (
-              <li key={view}>{view}</li>
+              <li className={workspace.listItem} key={view}>
+                <strong className={workspace.itemTitle}>{view}</strong>
+              </li>
             ))}
           </ul>
         </article>
 
-        <article className={styles.wide}>
-          <h2>Report pages</h2>
-          <div className={styles.pageList}>
+        <article className={`${workspace.panel} ${workspace.fullWidth}`}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Recommended report pages</h2>
+              <p className={workspace.panelDescription}>
+                Suggested information architecture for the executive and operational report pack.
+              </p>
+            </div>
+          </div>
+          <div className={workspace.triGrid}>
             {pages.map((page) => (
-              <section key={page.title}>
-                <h3>{page.title}</h3>
-                <p>{page.visuals}</p>
+              <section className={workspace.summaryCard} key={page.title}>
+                <strong className={workspace.itemTitle}>{page.title}</strong>
+                <p className={workspace.message}>{page.visuals}</p>
               </section>
             ))}
           </div>
         </article>
 
-        <article className={styles.wide}>
-          <h2>Build procedure</h2>
-          <ol>
-            <li>Run an ETL job from the Pipelines page.</li>
-            <li>Refresh analytics from the Dashboard or Analytics page.</li>
-            <li>Open Power BI Desktop and choose PostgreSQL database.</li>
-            <li>Connect to localhost:5432 and select the analytics views.</li>
-            <li>Build report pages from the documented visual mappings.</li>
+        <article className={`${workspace.panel} ${workspace.fullWidth}`}>
+          <div className={workspace.panelHeader}>
+            <div>
+              <h2 className={workspace.panelTitle}>Build procedure</h2>
+              <p className={workspace.panelDescription}>
+                Recommended sequence for refreshing the reporting model before distribution.
+              </p>
+            </div>
+          </div>
+          <ol className={workspace.cleanList}>
+            <li className={workspace.listItem}>Run the orders pipeline from the Pipelines workspace.</li>
+            <li className={workspace.listItem}>Refresh the analytics mart from the Dashboard or Analytics view.</li>
+            <li className={workspace.listItem}>Connect your reporting tool to the managed PostgreSQL environment.</li>
+            <li className={workspace.listItem}>Import the documented `analytics.pbi_*` views.</li>
+            <li className={workspace.listItem}>Publish the report pack after validating metrics against the app.</li>
           </ol>
         </article>
       </section>
-    </main>
+    </AppShell>
   );
 }
